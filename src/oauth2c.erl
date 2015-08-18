@@ -218,7 +218,40 @@ do_retrieve_access_token(#client{grant_type = <<"client_credentials">>,
             {error, Reason};
         {error, Reason} ->
             {error, Reason}
+    end;
+%% Dropbox API    
+do_retrieve_access_token(#client{grant_type = <<"authorization_code">>,
+                                 id = Id, secret = Secret} = Client) ->
+    Payload0 = [{<<"grant_type">>, Client#client.grant_type}],
+    Payload = case Client#client.scope of
+                  undefined ->
+                      Payload0;
+                  Scope ->
+                      [{<<"scope">>, Scope}|Payload0]
+              end,
+    Auth = base64:encode(<<Id/binary, ":", Secret/binary>>),
+    Header = [{"Authorization", binary_to_list(<<"Basic ", Auth/binary>>)}],
+    case restc:request(post, percent, binary_to_list(Client#client.auth_url),
+                       [200], Header, Payload) of
+        {ok, _, Headers, Body} ->
+            AccessToken = proplists:get_value(<<"access_token">>, Body),
+            TokenType = proplists:get_value(<<"token_type">>, Body, ""),
+            Result = #client{
+                             grant_type    = Client#client.grant_type
+                             ,auth_url     = Client#client.auth_url
+                             ,access_token = AccessToken
+                             ,token_type   = get_token_type(TokenType)
+                             ,id           = Client#client.id
+                             ,secret       = Client#client.secret
+                             ,scope        = Client#client.scope
+                            },
+            {ok, Headers, Result};
+        {error, _, _, Reason} ->
+            {error, Reason};
+        {error, Reason} ->
+            {error, Reason}
     end.
+
 
 -spec get_token_type(binary()) -> token_type().
 get_token_type(Type) ->
