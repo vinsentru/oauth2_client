@@ -227,7 +227,7 @@ do_retrieve_access_token(#client{grant_type = <<"authorization_code">>,
                   undefined ->
                       Payload0;
                   Scope ->
-                      [{<<"scope">>, Scope}|Payload0]
+                      [{<<"code">>, Scope}|Payload0]
               end,
     Auth = base64:encode(<<Id/binary, ":", Secret/binary>>),
     Header = [{"Authorization", binary_to_list(<<"Basic ", Auth/binary>>)}],
