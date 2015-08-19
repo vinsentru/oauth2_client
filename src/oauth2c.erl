@@ -227,7 +227,8 @@ do_retrieve_access_token(#client{grant_type = <<"authorization_code">>,
                   undefined ->
                       Payload0;
                   Scope ->
-                      [{<<"code">>, Scope}|Payload0]
+                    %% Scope is a proplist with extra options like code and redirect_url
+                      Scope ++ Payload0
               end,
     Auth = base64:encode(<<Id/binary, ":", Secret/binary>>),
     Header = [{"Authorization", binary_to_list(<<"Basic ", Auth/binary>>)}],
