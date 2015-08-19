@@ -236,12 +236,13 @@ do_retrieve_access_token(#client{grant_type = <<"authorization_code">>,
         {ok, _, Headers, Body} ->
             AccessToken = proplists:get_value(<<"access_token">>, Body),
             TokenType = proplists:get_value(<<"token_type">>, Body, ""),
+            Uid = proplists:get_value(<<"uid">>, Body, Client#client.id),
             Result = #client{
                              grant_type    = Client#client.grant_type
                              ,auth_url     = Client#client.auth_url
                              ,access_token = AccessToken
                              ,token_type   = get_token_type(TokenType)
-                             ,id           = Client#client.id
+                             ,id           = Uid
                              ,secret       = Client#client.secret
                              ,scope        = Client#client.scope
                             },
