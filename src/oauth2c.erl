@@ -140,7 +140,7 @@ request(Method, Type, Url, Expect, Headers, Client) ->
     Client  :: #client{}.
 request(Method, Type, Url, Expect, Headers, Body, Client) ->
     case do_request(Method, Type, Url, Expect, Headers, Body, Client) of
-        {{_, 401, _, _}, Client2} ->
+        {{_, 401, _, _}, _} ->
             % {ok, _RetrHeaders, Client3} = do_retrieve_access_token(Client2),
             % do_request(Method, Type, Url, Expect, Headers, Body, Client3);
             % Will not work for console app and Dropbox/Google
