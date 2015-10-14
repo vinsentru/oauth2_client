@@ -45,7 +45,8 @@
         refresh_token = undefined :: binary() | undefined,
         id            = undefined :: binary() | undefined,
         secret        = undefined :: binary() | undefined,
-        scope         = undefined :: binary() | undefined
+        scope         = undefined :: binary() | undefined,
+        body          = undefined :: binary() | undefined
 }).
 
 -type method()         :: head | get | put | post | trace | options | delete.
@@ -140,8 +141,10 @@ request(Method, Type, Url, Expect, Headers, Client) ->
 request(Method, Type, Url, Expect, Headers, Body, Client) ->
     case do_request(Method, Type, Url, Expect, Headers, Body, Client) of
         {{_, 401, _, _}, Client2} ->
-            {ok, _RetrHeaders, Client3} = do_retrieve_access_token(Client2),
-            do_request(Method, Type, Url, Expect, Headers, Body, Client3);
+            % {ok, _RetrHeaders, Client3} = do_retrieve_access_token(Client2),
+            % do_request(Method, Type, Url, Expect, Headers, Body, Client3);
+            % Will not work for console app and Dropbox/Google
+            {error,401,"Renew your auth token"};
         Result -> Result
     end.
 
@@ -227,7 +230,7 @@ do_retrieve_access_token(#client{grant_type = <<"authorization_code">>,
                   undefined ->
                       Payload0;
                   Scope ->
-                    %% Scope is a proplist with extra options like code and redirect_url
+                    %% Scope is a proplist with extra options like code and redirect_uri
                       Scope ++ Payload0
               end,
     Auth = base64:encode(<<Id/binary, ":", Secret/binary>>),
@@ -246,6 +249,7 @@ do_retrieve_access_token(#client{grant_type = <<"authorization_code">>,
                              ,id           = Uid
                              ,secret       = Client#client.secret
                              ,scope        = Client#client.scope
+                             ,body         = Body
                             },
             {ok, Headers, Result};
         {error, _, _, Reason} ->
@@ -263,9 +267,13 @@ get_token_type(Type) ->
 get_str_token_type("bearer") -> bearer;
 get_str_token_type(_Else) -> unsupported.
 
-do_request(Method, Type, Url, Expect, Headers, Body, Client) ->
+do_request(Method, Type, Url, Expect, Headers, Body, Client) when is_binary(Url) ->
     Headers2 = add_auth_header(Headers, Client),
-    {restc:request(Method, Type, binary_to_list(Url), Expect, Headers2, Body), Client}.
+    {restc:request(Method, Type, binary_to_list(Url), Expect, Headers2, Body), Client};
+
+do_request(Method, Type, Url, Expect, Headers, Body, Client) when is_list(Url) ->
+    Headers2 = add_auth_header(Headers, Client),
+    {restc:request(Method, Type, Url, Expect, Headers2, Body), Client}.    
 
 add_auth_header(Headers, #client{access_token = AccessToken, token_type = TokenType}) ->
     Prefix = autorization_prefix(TokenType),
