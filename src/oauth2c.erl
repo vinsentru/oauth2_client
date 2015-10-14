@@ -267,13 +267,9 @@ get_token_type(Type) ->
 get_str_token_type("bearer") -> bearer;
 get_str_token_type(_Else) -> unsupported.
 
-do_request(Method, Type, Url, Expect, Headers, Body, Client) when is_binary(Url) ->
+do_request(Method, Type, Url, Expect, Headers, Body, Client) ->
     Headers2 = add_auth_header(Headers, Client),
-    {restc:request(Method, Type, binary_to_list(Url), Expect, Headers2, Body), Client};
-
-do_request(Method, Type, Url, Expect, Headers, Body, Client) when is_list(Url) ->
-    Headers2 = add_auth_header(Headers, Client),
-    {restc:request(Method, Type, Url, Expect, Headers2, Body), Client}.    
+    {restc:request(Method, Type, binary_to_list(Url), Expect, Headers2, Body), Client}. 
 
 add_auth_header(Headers, #client{access_token = AccessToken, token_type = TokenType}) ->
     Prefix = autorization_prefix(TokenType),
