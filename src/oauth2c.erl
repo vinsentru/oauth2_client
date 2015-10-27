@@ -57,7 +57,7 @@
 -type status_codes()   :: [status_code()].
 -type status_code()    :: integer().
 -type reason()         :: term().
--type content_type()   :: json | xml | percent | binary.
+-type content_type()   :: json | xml | percent | binary | string().
 -type property()       :: atom() | tuple().
 -type proplist()       :: [property()].
 -type body()           :: proplist().
@@ -239,6 +239,7 @@ do_retrieve_access_token(#client{grant_type = <<"authorization_code">>,
                        [200], Header, Payload) of
         {ok, _, Headers, Body} ->
             AccessToken = proplists:get_value(<<"access_token">>, Body),
+            RefreshToken = proplists:get_value(<<"refresh_token">>, Body,""),
             TokenType = proplists:get_value(<<"token_type">>, Body, ""),
             Uid = proplists:get_value(<<"uid">>, Body, Client#client.id),
             Result = #client{
@@ -246,6 +247,7 @@ do_retrieve_access_token(#client{grant_type = <<"authorization_code">>,
                              ,auth_url     = Client#client.auth_url
                              ,access_token = AccessToken
                              ,token_type   = get_token_type(TokenType)
+                             ,refresh_token = RefreshToken
                              ,id           = Uid
                              ,secret       = Client#client.secret
                              ,scope        = Client#client.scope
